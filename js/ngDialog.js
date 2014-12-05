@@ -77,7 +77,14 @@
 						if (typeof window.Hammer !== 'undefined') {
 							var hammerTime = angular.element($dialog).scope().hammerTime;
 							hammerTime.off('tap', closeByDocumentHandler);
-							hammerTime.destroy();
+							
+							// Try to destroy Hammer. This will catch error on Hammer 1.1.3.
+							try{
+			          hammerTime.destroy();
+			        } catch (err){
+
+			        }
+
 							delete $dialog.scope().hammerTime;
 						} else {
 							$dialog.unbind('click');

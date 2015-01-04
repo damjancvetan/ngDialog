@@ -38,7 +38,7 @@
 			angular.extend(defaults, newDefaults);
 		};
 
-		var globalID = 0, dialogsCount = 0, closeByDocumentHandler, defers = {};
+		var globalID = 0, dialogsCount = 0, closeByDocumentHandler, closeByDocumentHandlerCloseBtn, defers = {};
 
 		this.$get = ['$document', '$templateCache', '$compile', '$q', '$http', '$rootScope', '$timeout', '$window', '$controller',
 			function ($document, $templateCache, $compile, $q, $http, $rootScope, $timeout, $window, $controller) {
@@ -74,21 +74,27 @@
 					performCloseDialog: function ($dialog, value) {
 						var id = $dialog.attr('id');
 
-						if (typeof window.Hammer !== 'undefined') {
-							var hammerTime = angular.element($dialog).scope().hammerTime;
-							hammerTime.off('tap', closeByDocumentHandler);
-							
-							// Try to destroy Hammer. This will catch error on Hammer 1.1.3.
-							try{
-			          hammerTime.destroy();
-			        } catch (err){
+						// if (typeof window.Hammer !== 'undefined') {
+						// 	var hammerTime = angular.element($dialog).scope().hammerTime;
+						// 	hammerTime.off('tap', closeByDocumentHandler);
 
-			        }
+						// 	// Try to destroy Hammer. This will catch error on Hammer 1.1.3.
+						// 	try{
+			   //        hammerTime.destroy();
+			   //      } catch (err){
 
-							delete $dialog.scope().hammerTime;
-						} else {
-							$dialog.unbind('click');
-						}
+			   //      }
+
+						// 	delete $dialog.scope().hammerTime;
+						// } else {
+						// 	$dialog.unbind('click');
+						// }
+						//
+						var $elOverlay = $el($dialog[0].getElementsByClassName('ngdialog-overlay'));
+						var $elClosebtn = $el($dialog[0].getElementsByClassName('ngdialog-close'));
+
+						$elOverlay.unbind('click touchstart');
+						$elClosebtn.unbind('click touchstart');
 
 						if (dialogsCount === 1) {
 							$body.unbind('keydown');
@@ -284,20 +290,27 @@
 							}
 
 							closeByDocumentHandler = function (event) {
-								var isOverlay = options.closeByDocument ? $el(event.target).hasClass('ngdialog-overlay') : false;
-								var isCloseBtn = $el(event.target).hasClass('ngdialog-close');
-
-								if (isOverlay || isCloseBtn) {
-									publicMethods.close($dialog.attr('id'), isCloseBtn ? '$closeButton' : '$document');
-								}
+								publicMethods.close($dialog.attr('id'), '$document');
 							};
 
-							if (typeof window.Hammer !== 'undefined') {
-								var hammerTime = scope.hammerTime = window.Hammer($dialog[0]);
-								hammerTime.on('tap', closeByDocumentHandler);
-							} else {
-								$dialog.bind('click', closeByDocumentHandler);
-							}
+							closeByDocumentHandlerCloseBtn = function (event) {
+								publicMethods.close($dialog.attr('id'), '$closeButton');
+							};
+
+							// if (typeof window.Hammer !== 'undefined') {
+							// 	var hammerTime = scope.hammerTime = window.Hammer($dialog[0]);
+							// 	hammerTime.on('tap', closeByDocumentHandler);
+							// } else {
+							// 	$dialog.bind('click', closeByDocumentHandler);
+							// }
+
+
+							var $elOverlay = $el($dialog[0].getElementsByClassName('ngdialog-overlay'));
+							var $elClosebtn = $el($dialog[0].getElementsByClassName('ngdialog-close'));
+
+							$elOverlay.bind('click touchstart', closeByDocumentHandler);
+							$elClosebtn.bind('click touchstart', closeByDocumentHandlerCloseBtn);
+
 
 							dialogsCount += 1;
 
